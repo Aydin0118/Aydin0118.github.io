@@ -40,6 +40,6 @@
 # [二、心理问题概述与解决建议](心理问题.md)
 <img width="894" height="276" alt="image" src="https://github.com/user-attachments/assets/bd7981ca-4357-4200-9ddf-fafbe9c919c8" />
 
->心**理问题一直为青少年的重要问题，Ayain身边也有相应的案例，请绝对重视**
+>**心理问题一直为青少年的重要问题，Ayain身边也有相应的案例，请绝对重视**
 >
 >**希望Everyone健康阳光生活吧！**
