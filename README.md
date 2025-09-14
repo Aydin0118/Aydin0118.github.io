@@ -48,7 +48,12 @@
 
 # [二、抖音知识平台](抖音学习.md)
 
+<img width="1045" height="492" alt="image" src="https://github.com/user-attachments/assets/5f2988f5-7883-4219-97b2-d430c77bc641" />
 
+
+>学无止境，学海无涯
+>
+>偏正学习的错误观点，去打造全面化的自己吧
 
 
 
