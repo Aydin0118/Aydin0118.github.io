@@ -59,6 +59,6 @@
 
 
 
-
+<video src="https://v26-web.douyinvod.com/dc8dde2155f145b26cbcd9dc431c966d/68e17ea9/video/tos/cn/tos-cn-ve-15/oosFEABxQe9DtprWmfhRsIujnUKXlDQ4rxEgAA/?a=6383&br=171&bt=171&btag=c0000e00038000&cd=0%7C0%7C0%7C3&ch=26&cquery=100H_100K_100o_100w_100B&cr=3&cs=0&cv=1&dr=0&ds=6&dy_q=1759570599&feature_id=46a7bb47b4fd1280f3d3825bf2b29388&ft=4TMWc6DhppftakLBEsA.C_fauVq0InRlh9Gc6BIb2S8K2QdHDDRj_aNeq37qousZ.&is_ssr=1&l=202510041736394281FFDDD0E1F36BC136&lr=all&mime_type=video_mp4&qs=12&rc=Ozc6ZWlpaWgzOTZmMzo1ZkBpM3A6Zmo5cm9oeDMzNGkzM0BfMTEzYy9hXzAxNTA1YTBiYSMuZWpoMmRraGtgLS1kLTBzcw%3D%3D&__vid=7471169145766169891"  width="500" height="300">
 
 
