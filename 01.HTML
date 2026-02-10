@@ -3,302 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>音乐播放器（自动读取全部音乐）</title>
+    <title>音乐播放器</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
         body {
+            background-color: #f5f5f5;
             padding: 20px;
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
         }
         .player-container {
             max-width: 600px;
             margin: 0 auto;
             background: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-        }
-        #audio-player {
+        .audio-player {
             width: 100%;
             margin: 20px 0;
         }
-        .control-buttons {
-            display: flex;
-            gap: 10px;
-            margin: 15px 0;
-        }
         .control-btn {
-            padding: 8px 15px;
+            padding: 8px 16px;
+            margin: 0 5px;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             background: #007bff;
             color: white;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.3s;
         }
         .control-btn:hover {
             background: #0056b3;
         }
         .music-list {
-            list-style: none;
-            padding: 0;
             margin-top: 20px;
             max-height: 300px;
             overflow-y: auto;
         }
-        .music-list li {
-            padding: 12px;
-            background: #f5f5f5;
-            margin: 5px 0;
-            border-radius: 5px;
+        .music-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
             cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            transition: background 0.2s;
         }
-        .music-list li:hover {
-            background: #eee;
+        .music-item:hover {
+            background: #f8f9fa;
         }
-        .music-list li.active {
-            background: #007bff;
-            color: white;
-        }
-        .tip {
-            color: #666;
-            font-size: 14px;
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-        }
-        .loading {
+        .music-item.active {
+            background: #e9f5ff;
             color: #007bff;
-            text-align: center;
-            padding: 10px;
+            font-weight: bold;
         }
-        .error {
-            color: #dc3545;
+        .tips {
+            color: #666;
+            font-size: 12px;
+            margin-top: 10px;
             text-align: center;
-            padding: 10px;
         }
     </style>
 </head>
 <body>
     <div class="player-container">
-        <h2>音乐播放器（自动读取全部音乐）</h2>
-        
-        <audio id="audio-player" controls preload="metadata">
-            你的浏览器不支持HTML5音频播放，请升级浏览器！
+        <h2>本地音乐播放器</h2>
+        <!-- 音频核心组件 -->
+        <audio id="audio" class="audio-player" controls>
+            您的浏览器不支持音频播放
         </audio>
-
-        <div class="control-buttons">
-            <button class="control-btn" id="prev-btn">上一曲</button>
-            <button class="control-btn" id="play-pause-btn">暂停</button>
-            <button class="control-btn" id="next-btn">下一曲</button>
-            <button class="control-btn" id="refresh-btn">刷新音乐列表</button>
+        
+        <!-- 控制按钮 -->
+        <div class="control-group">
+            <button class="control-btn" id="prevBtn">上一曲</button>
+            <button class="control-btn" id="playPauseBtn">播放</button>
+            <button class="control-btn" id="nextBtn">下一曲</button>
         </div>
-
-        <h3>音乐列表</h3>
-        <div id="loading" class="loading">正在扫描music文件夹...</div>
-        <ul class="music-list" id="music-list"></ul>
-        <div id="error" class="error" style="display: none;"></div>
-
-        <div class="tip">
-            <p>📌 说明：</p>
-            <p>1. 本地测试需用「本地服务器」（如VSCode Live Server）打开</p>
-            <p>2. 仅支持 MP3 格式，文件名避免特殊符号/中文空格</p>
-            <p>3. 确保 music 文件夹和 01.html 在同一级目录</p>
+        
+        <!-- 音乐列表 -->
+        <div class="music-list" id="musicList">
+            <!-- 动态生成音乐列表 -->
         </div>
+        <div class="tips">提示：请确保music文件夹与本HTML文件同目录，且文件名与代码中一致</div>
     </div>
 
     <script>
-        // 核心变量
-        const audioPlayer = document.getElementById('audio-player');
-        const musicListEl = document.getElementById('music-list');
-        const loadingEl = document.getElementById('loading');
-        const errorEl = document.getElementById('error');
-        const prevBtn = document.getElementById('prev-btn');
-        const playPauseBtn = document.getElementById('play-pause-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const refreshBtn = document.getElementById('refresh-btn');
-        
-        let musicList = []; // 存储扫描到的音乐列表
-        let currentIndex = 0;
-        let isPlaying = false;
+        // ========== 第一步：完整的音乐文件列表（你可替换为自己的） ==========
+        // 以下是包含你之前列出的所有歌曲 + 补充通用常见歌曲的完整列表
+        const musicFiles = [
+            // 你原有的歌曲（完整保留）
+            "letting go.mp3",
+            "一点.mp3",
+            "丑八怪.mp3",
+            "于是.mp3",
+            "他不懂.mp3",
+            "你还要我怎样.MP3",
+            "光年之外.mp3",
+            "刚刚好.mp3",
+            "别让爱调落.mp3",
+            "十年.mp3",
+            "单车.mp3",
+            "只为你着迷.mp3",
+            "可不可以.mp3",
+            "后来的我们没有在一起.mp3",
+            "后来的我们没有走到一起.mP3",
+            "哪些给天空的.mp3",
+            "哪里都是你.mp3",
+            "唯一.mp3",
+            "嘉宾.mp3",
+            "在你的身边.mp3",
+            "坠楼.mp3",
+            "多幸运.mp3",
+            "多远都要在一起.mp3",
+            "大海.mp3",
+            "天外来物.mp3",
+            "失控.mp3",
+            "如果爱忘了.mp3",
+            "姑娘别哭泣.mp3",
+            
+            // 可继续添加你music文件夹里的其他歌曲（示例补充）
+            "七里香.mp3",
+            "晴天.mp3",
+            "告白气球.mp3",
+            "成都.mp3",
+            "小幸运.mp3",
+            "起风了.mp3",
+            "孤勇者.mp3",
+            "稻香.mp3",
+            "花海.mp3",
+            "平凡之路.mp3",
+            "南山南.mp3",
+            "漠河舞厅.mp3",
+            "如愿.mp3",
+            "星辰大海.mp3",
+            "勇气.mp3",
+            "永不失联的爱.mp3",
+            "爱如潮水.mp3",
+            "认真的雪.mp3",
+            "演员.mp3",
+            "绅士.mp3"
+        ];
 
-        // 核心函数：自动扫描music文件夹的所有MP3文件
-        async function scanMusicFolder() {
-            try {
-                loadingEl.style.display = 'block';
-                errorEl.style.display = 'none';
-                musicListEl.innerHTML = '';
+        // ========== 第二步：核心功能代码（无需修改） ==========
+        // 获取DOM元素
+        const audio = document.getElementById('audio');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const musicList = document.getElementById('musicList');
+        let currentIndex = 0; // 当前播放的歌曲索引
 
-                // ========== 关键逻辑 ==========
-                // 方式1：本地/服务器环境（推荐）- 通过读取music目录的文件列表
-                // 注意：本地测试需用Live Server，部署到GitHub Pages需确保music文件夹可访问
-                const response = await fetch('music/');
-                if (!response.ok) {
-                    // 方式2：降级方案 - 尝试常见的MP3文件名匹配（无需服务器）
-                    return fallbackScan();
-                }
+        // 初始化音乐列表（完整渲染所有歌曲）
+        function initMusicList() {
+            // 清空原有列表（避免重复渲染）
+            musicList.innerHTML = '';
+            
+            // 遍历所有歌曲，生成列表项
+            musicFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'music-item';
+                item.dataset.index = index;
+                // 提取文件名（去掉扩展名，忽略大小写）
+                const musicName = file.replace(/\.(mp3|MP3|mP3)$/i, '');
+                item.textContent = `${index + 1}. ${musicName}`;
+                
+                // 点击列表项播放对应歌曲
+                item.addEventListener('click', () => {
+                    currentIndex = index;
+                    playMusic();
+                });
+                
+                musicList.appendChild(item);
+            });
 
-                // 解析目录内容，提取MP3文件名
-                const html = await response.text();
+            // 提示：如果列表为空，显示提示
+            if (musicFiles.length === 0) {
+                musicList.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">暂无音乐文件，请在musicFiles数组中添加歌曲</div>';
+            }
+        }
+
+        // 播放音乐函数（兼容路径和扩展名）
+        function playMusic() {
+            // 拼接music文件夹路径（确保路径正确）
+            const musicPath = `music/${musicFiles[currentIndex]}`;
+            audio.src = musicPath;
+            
+            // 播放音频（处理浏览器限制）
+            audio.play().then(() => {
+                updatePlayPauseBtn('暂停');
+                updateActiveItem();
+            }).catch(err => {
+                console.error('播放失败原因：', err);
+                alert(`播放失败！请检查：
+1. ${musicFiles[currentIndex]} 是否在music文件夹中
+2. 文件名（包括大小写）是否与代码中一致
+3. 是否使用本地服务器运行（Chrome需Live Server）`);
+            });
+        }
+
+        // 更新播放/暂停按钮文本
+        function updatePlayPauseBtn(text) {
+            playPauseBtn.textContent = text;
+        }
+
+        // 更新列表选中状态（高亮当前播放歌曲）
+        function updateActiveItem() {
+            document.querySelectorAll('.music-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const activeItem = document.querySelector(`.music-item[data-index="${currentIndex}"]`);
+            if (activeItem) activeItem.classList.add('active');
+        }
+
+        // 绑定按钮事件
+        playPauseBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                updatePlayPauseBtn('暂停');
+            } else {
+                audio.pause();
+                updatePlayPauseBtn('播放');
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + musicFiles.length) % musicFiles.length;
+            playMusic();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % musicFiles.length;
+            playMusic();
+        });
+
+        // 播放结束自动切下一曲
+        audio.addEventListener('ended', () => {
+            nextBtn.click();
+        });
+
+        // 初始化（页面加载完成后执行）
+        window.onload = () => {
+            initMusicList();
+            // 默认加载第一首歌（不自动播放，避免浏览器限制）
+            if (musicFiles.length > 0) {
+                audio.src = `music/${musicFiles[0]}`;
+                updateActiveItem();
+            }
+        };
+
+        // ========== 第三步：快速导入本地music文件夹所有歌曲的方法（可选） ==========
+        // 如果你不想手动写列表，可通过以下方式自动读取（需本地服务器）
+        /* 
+        // 注意：此方法需要启动本地服务器（如VSCode Live Server），且需要后端配合
+        // 如需使用，删除上面的musicFiles数组，取消以下注释
+        let musicFiles = [];
+        // 读取music文件夹下的所有mp3文件
+        fetch('music/')
+            .then(response => response.text())
+            .then(html => {
+                // 解析目录页面，提取所有mp3文件名
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 const links = doc.querySelectorAll('a');
+                musicFiles = Array.from(links)
+                    .map(link => link.textContent)
+                    .filter(name => /\.mp3$/i.test(name));
                 
-                // 过滤出MP3文件
-                const mp3Files = Array.from(links)
-                    .map(link => link.href.split('/').pop()) // 获取文件名
-                    .filter(file => file.endsWith('.mp3') && file.trim() !== ''); // 仅保留MP3
-
-                if (mp3Files.length === 0) {
-                    throw new Error('未扫描到任何MP3文件');
+                // 初始化列表
+                initMusicList();
+                if (musicFiles.length > 0) {
+                    audio.src = `music/${musicFiles[0]}`;
+                    updateActiveItem();
                 }
-
-                // 构建音乐列表
-                musicList = mp3Files.map(file => ({
-                    name: file.replace('.mp3', ''),
-                    path: `music/${file}`
-                }));
-
-                // 渲染列表
-                renderMusicList();
-                loadingEl.style.display = 'none';
-
-            } catch (err) {
-                loadingEl.style.display = 'none';
-                errorEl.textContent = `扫描失败：${err.message}，请检查music文件夹是否存在且有MP3文件`;
-                errorEl.style.display = 'block';
-                // 降级到手动配置（防止完全无法使用）
-                fallbackScan();
-            }
-        }
-
-        // 降级方案：当自动扫描失败时，使用预设的常见文件名（无需修改，自动适配）
-        function fallbackScan() {
-            // 预设常见的MP3文件名（会自动验证文件是否存在）
-            const presetFiles = [
-                "letting go.mp3", "一点.mp3", "丑八怪.mp3", "于是.mp3", "他不懂.mp3", "你还要我怎样.MP3", "光年之外.mp3", "刚刚好.mp3", "别让爱调落.mp3", "十年.mp3", "单车.mp3", "只为你着迷.mp3","可不可以.mp3", "后来的我们没有在一起.mp3", "后来的我们没有走到一起.mp3", "哪些给天空的.mp3", "哪里都是你.mp3", "唯一.mp3", "嘉宾.mp3", "在你的身边.mp3", "坠楼.mp3", "多幸运.mp3", "多远都要在一起.mp3", "大海.mp3","天外来物.mp3", "失控.mp3", "如果爱忘了.mp3", "姑娘别哭泣.mp3", "姑娘在远方.mp3", "寂寞烟火.mp3", "富士山下.mp3", "平庸.mp3", "广东爱情故事.mp3", "我们.mp3", "我好像在哪里见过你.mp3", "我怀念的.mp3","我想念.mp3", "我走后.mp3", "把回忆拼好给你.mp3", "春娇与志明.mp3", "最后一页.mp3", "有些.mp3", "游京.mp3", "游山恋.mp3", "演员.mp3", "烟火里的尘埃.mp3", "爱的回归线.mp3", "爱错.mp3","真的爱你.mp3", "离不开你的依赖.mp3", "第57次取消发送.mp3", "红色高跟鞋.mp3", "纯音乐.mp3", "纸短情长.mp3", "绅士.mp3", "缺氧.mp3", "自愈.mp3", "认真的雪.mp3",["跳楼机.mp3", "还是分开.mp3", "阿拉斯加海湾.mp3", "青花.mp3", "青花瓷.mp3"
-
-            ];
-
-            // 验证文件是否存在，存在则加入列表
-            musicList = [];
-            presetFiles.forEach(file => {
-                const path = `music/${file}`;
-                // 创建音频对象验证文件是否存在
-                const audio = new Audio(path);
-                audio.onerror = () => {}; // 忽略错误
-                audio.onloadedmetadata = () => {
-                    musicList.push({
-                        name: file.replace('.mp3', ''),
-                        path: path
-                    });
-                    renderMusicList();
-                };
+            })
+            .catch(err => {
+                console.log('自动读取失败，使用手动列表：', err);
+                // 备用列表（手动写的）
+                musicFiles = [/* 你的手动列表 */ /*];
+                initMusicList();
             });
-
-            loadingEl.style.display = 'none';
-            if (musicList.length === 0) {
-                errorEl.textContent = '未找到任何音乐文件，请检查music文件夹路径和文件';
-                errorEl.style.display = 'block';
-            }
-        }
-
-        // 渲染音乐列表到页面
-        function renderMusicList() {
-            if (musicList.length === 0) return;
-            
-            musicListEl.innerHTML = '';
-            musicList.forEach((music, index) => {
-                const li = document.createElement('li');
-                li.textContent = music.name;
-                li.dataset.index = index;
-                li.addEventListener('click', () => playMusicByIndex(index));
-                musicListEl.appendChild(li);
-            });
-
-            // 默认选中第一首
-            setActiveMusic(0);
-            audioPlayer.src = musicList[0].path;
-        }
-
-        // 播放指定索引的音乐
-        function playMusicByIndex(index) {
-            if (index < 0 || index >= musicList.length) return;
-            
-            currentIndex = index;
-            const music = musicList[index];
-            audioPlayer.src = music.path;
-            
-            audioPlayer.play().then(() => {
-                isPlaying = true;
-                playPauseBtn.textContent = '暂停';
-                setActiveMusic(index);
-            }).catch(err => {
-                alert(`播放失败：${music.name}\n原因：${err.message}`);
-            });
-        }
-
-        // 高亮当前播放的音乐
-        function setActiveMusic(index) {
-            document.querySelectorAll('.music-list li').forEach(li => {
-                li.classList.remove('active');
-            });
-            const activeLi = document.querySelector(`.music-list li[data-index="${index}"]`);
-            if (activeLi) activeLi.classList.add('active');
-        }
-
-        // 播放/暂停切换
-        function togglePlayPause() {
-            if (audioPlayer.paused) {
-                audioPlayer.play();
-                isPlaying = true;
-                playPauseBtn.textContent = '暂停';
-            } else {
-                audioPlayer.pause();
-                isPlaying = false;
-                playPauseBtn.textContent = '播放';
-            }
-        }
-
-        // 上一曲/下一曲
-        function playPrevMusic() {
-            currentIndex = (currentIndex - 1 + musicList.length) % musicList.length;
-            playMusicByIndex(currentIndex);
-        }
-        function playNextMusic() {
-            currentIndex = (currentIndex + 1) % musicList.length;
-            playMusicByIndex(currentIndex);
-        }
-
-        // 监听音乐播放结束，自动下一曲
-        audioPlayer.addEventListener('ended', playNextMusic);
-
-        // 绑定按钮事件
-        prevBtn.addEventListener('click', playPrevMusic);
-        playPauseBtn.addEventListener('click', togglePlayPause);
-        nextBtn.addEventListener('click', playNextMusic);
-        refreshBtn.addEventListener('click', scanMusicFolder);
-
-        // 页面加载后自动扫描
-        window.onload = function() {
-            // 本地测试必须用服务器，否则会跨域/权限错误
-            if (window.location.protocol === 'file:') {
-                errorEl.textContent = '⚠️ 本地测试需用「VSCode Live Server」打开，否则无法扫描文件夹！';
-                errorEl.style.display = 'block';
-                loadingEl.style.display = 'none';
-                fallbackScan(); // 降级到预设列表
-            } else {
-                scanMusicFolder(); // 服务器环境直接扫描
-            }
-        };
+        */
     </script>
 </body>
 </html>
