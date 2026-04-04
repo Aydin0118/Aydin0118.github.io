@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AydinWeb | 个人主页</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      display: flex;
+      min-height: 100vh;
+      background: #f0f2f5;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* 侧边栏 */
+    .sidebar {
+      width: 260px;
+      background: #2d3748;
+      color: white;
+      padding: 2rem 1rem;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    /* 头像 → 读取仓库里的 toxiang.png */
+    .avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      display: block;
+      object-fit: cover;
+      border: 3px solid #4a5568;
+    }
+
+    .sidebar h1 {
+      font-size: 1.4rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .sidebar .desc {
+      text-align: center;
+      color: #a0aec0;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .file-item {
+      padding: 0.8rem 1rem;
+      background: #4a5568;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.95rem;
+    }
+
+    .file-item:hover {
+      background: #5a6980;
+    }
+
+    .file-item.active {
+      background: #7b68ee;
+      color: white;
+    }
+
+    /* 联系方式 */
+    .contact {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #4a5568;
+      font-size: 0.9rem;
+      color: #cbd5e0;
+    }
+    .contact a {
+      color: #9f7aea;
+      text-decoration: none;
+    }
+    .contact p {
+      margin: 0.4rem 0;
+    }
+
+    /* 主内容区 */
+    .main {
+      flex: 1;
+      margin-left: 260px;
+      padding: 3rem 4rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    #content {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      min-height: 600px;
+      flex: 1;
+    }
+
+    /* 底部版权 */
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      color: #718096;
+      font-size: 0.9rem;
+    }
+
+    /* Markdown 样式 */
+    #content h1, #content h2, #content h3 {
+      margin: 1.2rem 0 0.8rem;
+      color: #2d3748;
+    }
+
+    #content p {
+      margin: 0.7rem 0;
+    }
+
+    #content a {
+      color: #7b68ee;
+    }
+
+    /* 加载 & 错误提示 */
+    .tip {
+      color: #718096;
+      font-style: italic;
+    }
+
+    .error {
+      color: #e53e3e;
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      .main {
+        margin-left: 0;
+        padding: 2rem 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 侧边栏 -->
+  <div class="sidebar">
+    <img class="avatar" src="toxiang.png" alt="Aydin头像">
+    <h1>Aydin</h1>
+    <p class="desc">wait for you...</p>
+
+    <div class="file-list" id="fileList">
+      加载文章列表中...
+    </div>
+
+    <!-- 联系方式 -->
+    <div class="contact">
+      <p>GitHub：<a href="https://github.com/Aydin0118" target="_blank">Aydin0118</a></p>
+      <p>邮箱：<a href="mailto:example@mail.com">aydinid@outlook.com</a></p>
+    </div>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="main">
+    <div id="content">
+      <span class="tip">请点击左侧文章查看内容 ✨</span>
+    </div>
+
+    <!-- 底部版权 -->
+    <div class="footer">
+      © 2025 - 2026 AydinWeb | 保留所有权利
+    </div>
+  </div>
+
+  <script>
+    const contentDiv = document.getElementById("content");
+    const fileList = document.getElementById("fileList");
+
+    // 自动获取 GitHub 仓库里的所有 .md 文件
+    async function loadMdFileList() {
+      try {
+        const repo = "Aydin0118/Aydin0118.github.io";
+        const url = `https://api.github.com/repos/${repo}/contents/`;
+        const res = await fetch(url);
+        const files = await res.json();
+
+        const mdFiles = files
+          .filter(f => f.name.endsWith(".md"))
+          .map(f => f.name);
+
+        renderList(mdFiles);
+      } catch (e) {
+        renderList([
+          "01.md","02.md","03.md","目录.md",
+          "心理问题.md","抖音学习.md","编程学习.md","openclaw.md"
+        ]);
+      }
+    }
+
+    // 渲染文章列表
+    function renderList(files) {
+      fileList.innerHTML = "";
+      files.forEach(file => {
+        const item = document.createElement("div");
+        item.className = "file-item";
+        item.textContent = file.replace(".md", "");
+        item.onclick = () => loadMarkdown(file);
+        fileList.appendChild(item);
+      });
+    }
+
+    // 加载并渲染 md
+    async function loadMarkdown(file) {
+      contentDiv.innerHTML = "加载中...";
+      try {
+        const res = await fetch(file);
+        if (!res.ok) throw new Error("文件不存在或已删除");
+        const text = await res.text();
+        contentDiv.innerHTML = marked.parse(text);
+      } catch (err) {
+        contentDiv.innerHTML = `<span class="error">⚠️ ${file} 不存在或无法加载</span>`;
+      }
+    }
+
+    // 启动
+    loadMdFileList();
+  </script>
+</body>
+</html>
