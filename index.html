@@ -68,7 +68,7 @@
       background: #4a5568;
       border-radius: 6px;
       cursor: pointer;
-      transition: 0.2s;
+      transition: 0.2;
       font-size: 0.95rem;
     }
 
@@ -136,6 +136,7 @@
 
     #content a {
       color: #7b68ee;
+      text-decoration: none;
     }
 
     /* 加载 & 错误提示 */
@@ -180,14 +181,14 @@
     <!-- 联系方式 -->
     <div class="contact">
       <p>GitHub：<a href="https://github.com/Aydin0118" target="_blank">Aydin0118</a></p>
-      <p>邮箱：<a href="mailto:example@mail.com">aydinid@outlook.com</a></p>
+      <p>邮箱：<a href="mailto:example@mail.com">example@mail.com</a></p>
     </div>
   </div>
 
   <!-- 主内容 -->
   <div class="main">
     <div id="content">
-      <span class="tip">请点击左侧文章查看内容 ✨</span>
+      <span class="tip">正在加载目录...</span>
     </div>
 
     <!-- 底部版权 -->
@@ -231,6 +232,9 @@
         item.onclick = () => loadMarkdown(file);
         fileList.appendChild(item);
       });
+
+      // 默认打开目录.md
+      loadMarkdown("目录.md");
     }
 
     // 加载并渲染 md
@@ -241,9 +245,25 @@
         if (!res.ok) throw new Error("文件不存在或已删除");
         const text = await res.text();
         contentDiv.innerHTML = marked.parse(text);
+
+        // ==============================================
+        // ✅ 核心：自动让所有 .md 链接在页面内渲染（不是源码）
+        // ==============================================
+        bindMdLinks();
       } catch (err) {
         contentDiv.innerHTML = `<span class="error">⚠️ ${file} 不存在或无法加载</span>`;
       }
+    }
+
+    // 自动绑定所有 md 链接
+    function bindMdLinks() {
+      document.querySelectorAll('#content a[href$=".md"]').forEach(link => {
+        link.onclick = (e) => {
+          e.preventDefault();
+          const file = link.getAttribute("href");
+          loadMarkdown(file);
+        };
+      });
     }
 
     // 启动
