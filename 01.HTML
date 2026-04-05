@@ -23,6 +23,23 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        .status-bar {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .online {
+            background: #e6f7e6;
+            color: #009900;
+        }
+        .offline {
+            background: #fff0f0;
+            color: #cc0000;
+        }
         .audio-player {
             width: 100%;
             margin: 20px 0;
@@ -69,224 +86,185 @@
 </head>
 <body>
     <div class="player-container">
+        <!-- 服务器连接状态条（心跳状态展示） -->
+        <div id="serverStatus" class="status-bar offline">
+            <span>服务器连接：已断开</span>
+            <span id="heartTip">心跳未启动</span>
+        </div>
+
         <h2>--Player--</h2>
-        <!-- 音频核心组件 -->
-        <audio id="audio" class="audio-player" controls>
-            您的浏览器不支持音频播放
-        </audio>
+        <audio id="audio" class="audio-player" controls>您的浏览器不支持音频播放</audio>
         
-        <!-- 控制按钮 -->
         <div class="control-group">
             <button class="control-btn" id="prevBtn">上一曲</button>
             <button class="control-btn" id="playPauseBtn">播放</button>
             <button class="control-btn" id="nextBtn">下一曲</button>
         </div>
         
-        <!-- 音乐列表 -->
-        <div class="music-list" id="musicList">
-            <!-- 动态生成音乐列表 -->
-        </div>
+        <div class="music-list" id="musicList"></div>
         <div class="tips">提示：请确保music文件夹与本HTML文件同目录，且文件名与代码中一致</div>
     </div>
 
     <script>
-        // ========== 第一步：完整的音乐文件列表（你可替换为自己的） ==========
-        // 以下是包含你之前列出的所有歌曲 + 补充通用常见歌曲的完整列表
+        // ===================== 音乐列表 =====================
         const musicFiles = [
-            // 你原有的歌曲（完整保留）
-            "letting go.mp3",
-            "一点.mp3",
-            "丑八怪.mp3",
-            "于是.mp3",
-            "他不懂.mp3",
-            "你还要我怎样.MP3",
-            "光年之外.mp3",
-            "刚刚好.mp3",
-            "别让爱调落.mp3",
-            "十年.mp3",
-            "单车.mp3",
-            "只为你着迷.mp3",
-            "可不可以.mp3",
-            "后来的我们没有在一起.mp3",
-            "后来的我们没有走到一起.mP3",
-            "哪些给天空的.mp3",
-            "哪里都是你.mp3",
-            "唯一.mp3",
-            "嘉宾.mp3",
-            "在你的身边.mp3",
-            "坠落.mp3",
-            "多幸运.mp3",
-            "多远都要在一起.mp3",
-            "大海.mp3",
-            "天外来物.mp3",
-            "失控.mp3",
-            "如果爱忘了.mp3",
-            "姑娘别哭泣.mp3",
-            "姑娘在远方.mp3",
-            "寂寞烟火.mp3",
-            "富士山下.mp3",
-            "平庸.mp3",
-            "广东爱情故事.mp3",
-            "我们.mp3",
-            "我好像在哪里见过你.mp3",
-            "我怀念的.mp3",
-            "我想念.mp3",
-            "我走后.mp3",
-            "把回忆拼好给你.mp3",
-            "春娇与志明.mp3",
-            "最后一页.mp3",
-            "有些.mp3",
-            "游京.mp3",
-            "游山恋.mp3",
-            "烟火里的尘埃.mp3",
-            "爱的回归线.mp3",
-            "爱错.mp3",
-            "真的爱你.mp3",
-            "离开你的依赖.mp3",
-            "认真的雪.mp3",
-            "演员.mp3",
-            "绅士.mp3"
+            "letting go.mp3","一点.mp3","丑八怪.mp3","于是.mp3","他不懂.mp3",
+            "你还要我怎样.MP3","光年之外.mp3","刚刚好.mp3","别让爱调落.mp3","十年.mp3",
+            "单车.mp3","只为你着迷.mp3","可不可以.mp3","后来的我们没有在一起.mp3",
+            "后来的我们没有走到一起.mP3","哪些给天空的.mp3","哪里都是你.mp3","唯一.mp3",
+            "嘉宾.mp3","在你的身边.mp3","坠落.mp3","多幸运.mp3","多远都要在一起.mp3",
+            "大海.mp3","天外来物.mp3","失控.mp3","如果爱忘了.mp3","姑娘别哭泣.mp3",
+            "姑娘在远方.mp3","寂寞烟火.mp3","富士山下.mp3","平庸.mp3","广东爱情故事.mp3",
+            "我们.mp3","我好像在哪里见过你.mp3","我怀念的.mp3","我想念.mp3","我走后.mp3",
+            "把回忆拼好给你.mp3","春娇与志明.mp3","最后一页.mp3","有些.mp3","游京.mp3",
+            "游山恋.mp3","烟火里的尘埃.mp3","爱的回归线.mp3","爱错.mp3","真的爱你.mp3",
+            "离开你的依赖.mp3","认真的雪.mp3","演员.mp3","绅士.mp3"
         ];
 
-        // ========== 第二步：核心功能代码（无需修改） ==========
-        // 获取DOM元素
-        const audio = document.getElementById('audio');
-        const playPauseBtn = document.getElementById('playPauseBtn');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const musicList = document.getElementById('musicList');
-        let currentIndex = 0; // 当前播放的歌曲索引
-
-        // 初始化音乐列表（完整渲染所有歌曲）
-        function initMusicList() {
-            // 清空原有列表（避免重复渲染）
-            musicList.innerHTML = '';
-            
-            // 遍历所有歌曲，生成列表项
-            musicFiles.forEach((file, index) => {
-                const item = document.createElement('div');
-                item.className = 'music-item';
-                item.dataset.index = index;
-                // 提取文件名（去掉扩展名，忽略大小写）
-                const musicName = file.replace(/\.(mp3|MP3|mP3)$/i, '');
-                item.textContent = `${index + 1}. ${musicName}`;
-                
-                // 点击列表项播放对应歌曲
-                item.addEventListener('click', () => {
-                    currentIndex = index;
-                    playMusic();
-                });
-                
-                musicList.appendChild(item);
-            });
-
-            // 提示：如果列表为空，显示提示
-            if (musicFiles.length === 0) {
-                musicList.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">暂无音乐文件，请在musicFiles数组中添加歌曲</div>';
-            }
-        }
-
-        // 播放音乐函数（兼容路径和扩展名）
-        function playMusic() {
-            // 拼接music文件夹路径（确保路径正确）
-            const musicPath = `music/${musicFiles[currentIndex]}`;
-            audio.src = musicPath;
-            
-            // 播放音频（处理浏览器限制）
-            audio.play().then(() => {
-                updatePlayPauseBtn('暂停');
-                updateActiveItem();
-            }).catch(err => {
-                console.error('播放失败原因：', err);
-                alert(`播放失败！请检查：
-1. ${musicFiles[currentIndex]} 是否在music文件夹中
-2. 文件名（包括大小写）是否与代码中一致
-3. 是否使用本地服务器运行（Chrome需Live Server）`);
-            });
-        }
-
-        // 更新播放/暂停按钮文本
-        function updatePlayPauseBtn(text) {
-            playPauseBtn.textContent = text;
-        }
-
-        // 更新列表选中状态（高亮当前播放歌曲）
-        function updateActiveItem() {
-            document.querySelectorAll('.music-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            const activeItem = document.querySelector(`.music-item[data-index="${currentIndex}"]`);
-            if (activeItem) activeItem.classList.add('active');
-        }
-
-        // 绑定按钮事件
-        playPauseBtn.addEventListener('click', () => {
-            if (audio.paused) {
-                audio.play();
-                updatePlayPauseBtn('暂停');
-            } else {
-                audio.pause();
-                updatePlayPauseBtn('播放');
-            }
-        });
-
-        prevBtn.addEventListener('click', () => {
-            currentIndex = (currentIndex - 1 + musicFiles.length) % musicFiles.length;
-            playMusic();
-        });
-
-        nextBtn.addEventListener('click', () => {
-            currentIndex = (currentIndex + 1) % musicFiles.length;
-            playMusic();
-        });
-
-        // 播放结束自动切下一曲
-        audio.addEventListener('ended', () => {
-            nextBtn.click();
-        });
-
-        // 初始化（页面加载完成后执行）
-        window.onload = () => {
-            initMusicList();
-            // 默认加载第一首歌（不自动播放，避免浏览器限制）
-            if (musicFiles.length > 0) {
-                audio.src = `music/${musicFiles[0]}`;
-                updateActiveItem();
-            }
+        // ===================== DOM 缓存（高性能） =====================
+        const DOM = {
+            audio: document.getElementById('audio'),
+            playPauseBtn: document.getElementById('playPauseBtn'),
+            prevBtn: document.getElementById('prevBtn'),
+            nextBtn: document.getElementById('nextBtn'),
+            musicList: document.getElementById('musicList'),
+            serverStatus: document.getElementById('serverStatus'),
+            heartTip: document.getElementById('heartTip')
         };
 
-        // ========== 第三步：快速导入本地music文件夹所有歌曲的方法（可选） ==========
-        // 如果你不想手动写列表，可通过以下方式自动读取（需本地服务器）
-        /* 
-        // 注意：此方法需要启动本地服务器（如VSCode Live Server），且需要后端配合
-        // 如需使用，删除上面的musicFiles数组，取消以下注释
-        let musicFiles = [];
-        // 读取music文件夹下的所有mp3文件
-        fetch('music/')
-            .then(response => response.text())
-            .then(html => {
-                // 解析目录页面，提取所有mp3文件名
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const links = doc.querySelectorAll('a');
-                musicFiles = Array.from(links)
-                    .map(link => link.textContent)
-                    .filter(name => /\.mp3$/i.test(name));
-                
-                // 初始化列表
-                initMusicList();
-                if (musicFiles.length > 0) {
-                    audio.src = `music/${musicFiles[0]}`;
-                    updateActiveItem();
-                }
-            })
-            .catch(err => {
-                console.log('自动读取失败，使用手动列表：', err);
-                // 备用列表（手动写的）
-                musicFiles = [/* 你的手动列表 */ /*];
-                initMusicList();
+        let currentIndex = 0;
+        let preloadAudio = null;
+
+        // ===================== 【核心】心跳保活机制 =====================
+        let heartTimer = null;       // 心跳定时器
+        let reconnectTimer = null;   // 重连定时器
+        let reconnectCount = 0;      // 重连次数
+        const MAX_RECONNECT = 5;     // 最大重连次数
+        const HEART_TIME = 10000;    // 心跳间隔：10秒
+
+        // 更新连接状态UI
+        function updateStatus(isOnline) {
+            if (isOnline) {
+                DOM.serverStatus.className = "status-bar online";
+                DOM.serverStatus.querySelector("span:first-child").textContent = "服务器连接：已连接";
+            } else {
+                DOM.serverStatus.className = "status-bar offline";
+                DOM.serverStatus.querySelector("span:first-child").textContent = "服务器连接：已断开";
+            }
+        }
+
+        // 发送心跳（最简单的GET请求，不消耗资源）
+        async function sendHeartBeat() {
+            try {
+                // 向当前服务器发送空请求，维持连接
+                await fetch(window.location.href, { method: 'HEAD', cache: 'no-store' });
+                updateStatus(true);
+                DOM.heartTip.textContent = "最后心跳：" + new Date().toLocaleTimeString();
+                reconnectCount = 0; // 重置重连次数
+            } catch (e) {
+                updateStatus(false);
+                DOM.heartTip.textContent = "连接断开，尝试重连...";
+                tryReconnect();
+            }
+        }
+
+        // 断开自动重连
+        function tryReconnect() {
+            if (reconnectCount >= MAX_RECONNECT) {
+                DOM.heartTip.textContent = "重连失败，请刷新页面";
+                return;
+            }
+            clearTimeout(reconnectTimer);
+            reconnectTimer = setTimeout(() => {
+                reconnectCount++;
+                sendHeartBeat();
+            }, 3000);
+        }
+
+        // 启动心跳
+        function startHeartBeat() {
+            if (heartTimer) clearInterval(heartTimer);
+            sendHeartBeat();
+            heartTimer = setInterval(sendHeartBeat, HEART_TIME);
+            DOM.heartTip.textContent = "心跳已启动";
+        }
+
+        // ===================== 音乐播放逻辑 =====================
+        function initMusicList() {
+            let listHtml = '';
+            musicFiles.forEach((file, index) => {
+                const name = file.replace(/\.(mp3|MP3|mP3)$/i, '');
+                listHtml += `<div class="music-item ${index===0?'active':''}" data-index="${index}">${index+1}. ${name}</div>`;
             });
-        */
+            DOM.musicList.innerHTML = listHtml;
+
+            DOM.musicList.addEventListener('click', (e) => {
+                const item = e.target.closest('.music-item');
+                if (item) {
+                    currentIndex = +item.dataset.index;
+                    playMusic();
+                }
+            });
+        }
+
+        // 预加载下一首（仅1首）
+        function preloadNextMusic() {
+            if (preloadAudio) preloadAudio = null;
+            if (musicFiles.length <= 1) return;
+            const next = (currentIndex + 1) % musicFiles.length;
+            preloadAudio = new Audio(`music/${musicFiles[next]}`);
+            preloadAudio.preload = "metadata";
+        }
+
+        // 播放音乐
+        function playMusic() {
+            const path = `music/${musicFiles[currentIndex]}`;
+            DOM.audio.src = path;
+            DOM.audio.play().then(() => {
+                DOM.playPauseBtn.textContent = "暂停";
+                updateActive();
+                preloadNextMusic();
+            }).catch(err => {
+                alert("播放失败：文件不存在或路径错误");
+            });
+        }
+
+        function updateActive() {
+            document.querySelectorAll('.music-item').forEach((i, idx) => {
+                i.classList.toggle('active', idx === currentIndex);
+            });
+        }
+
+        // 按钮事件
+        DOM.playPauseBtn.onclick = () => {
+            DOM.audio.paused ? DOM.audio.play() : DOM.audio.pause();
+            DOM.playPauseBtn.textContent = DOM.audio.paused ? "播放" : "暂停";
+        };
+        DOM.prevBtn.onclick = () => {
+            currentIndex = (currentIndex - 1 + musicFiles.length) % musicFiles.length;
+            playMusic();
+        };
+        DOM.nextBtn.onclick = () => {
+            currentIndex = (currentIndex + 1) % musicFiles.length;
+            playMusic();
+        };
+        DOM.audio.onended = () => DOM.nextBtn.click();
+
+        // ===================== 页面初始化 =====================
+        document.addEventListener('DOMContentLoaded', () => {
+            initMusicList();
+            startHeartBeat(); // 页面加载 → 自动启动心跳
+            if (musicFiles.length) {
+                DOM.audio.src = `music/${musicFiles[0]}`;
+                preloadNextMusic();
+            }
+        });
+
+        // 页面关闭 → 清理定时器
+        window.onbeforeunload = () => {
+            clearInterval(heartTimer);
+            clearTimeout(reconnectTimer);
+        };
     </script>
 </body>
 </html>
