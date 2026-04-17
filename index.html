@@ -15,61 +15,78 @@
 
     body {
       display: flex;
+      flex-direction: column; /* 改为纵向布局 */
       min-height: 100vh;
       background: #f0f2f5;
       color: #333;
       line-height: 1.6;
     }
 
-    /* 侧边栏 */
-    .sidebar {
-      width: 260px;
+    /* 顶部导航栏（原侧边栏改造） */
+    .header {
+      width: 100%;
       background: #2d3748;
       color: white;
-      padding: 2rem 1rem;
-      position: fixed;
-      height: 100vh;
-      overflow-y: auto;
+      padding: 1rem 2rem;
+      position: sticky; /* 固定在顶部 */
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    /* 头像 → 读取仓库里的 toxiang.png */
+    /* 顶部内容容器 */
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    /* 头像 */
     .avatar {
-      width: 90px;
-      height: 90px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
-      margin: 0 auto 1rem;
-      display: block;
       object-fit: cover;
       border: 3px solid #4a5568;
     }
 
-    .sidebar h1 {
-      font-size: 1.4rem;
-      text-align: center;
-      margin-bottom: 0.5rem;
+    /* 个人信息 */
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
     }
 
-    .sidebar .desc {
-      text-align: center;
+    .profile-info h1 {
+      font-size: 1.4rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .profile-info .desc {
       color: #a0aec0;
       font-size: 0.9rem;
-      margin-bottom: 2rem;
     }
 
+    /* 文件列表（目录）- 横向排列 */
     .file-list {
       display: flex;
-      flex-direction: column;
       gap: 0.6rem;
-      margin-bottom: 1.5rem;
+      overflow-x: auto; /* 超出横向滚动 */
+      padding: 0.5rem 0;
+      flex-wrap: wrap; /* 小屏幕自动换行 */
     }
 
     .file-item {
-      padding: 0.8rem 1rem;
+      padding: 0.6rem 1rem;
       background: #4a5568;
       border-radius: 6px;
       cursor: pointer;
-      transition: 0.2;
+      transition: 0.2s;
       font-size: 0.95rem;
+      white-space: nowrap; /* 不换行 */
     }
 
     .file-item:hover {
@@ -83,28 +100,25 @@
 
     /* 联系方式 */
     .contact {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid #4a5568;
       font-size: 0.9rem;
       color: #cbd5e0;
+      white-space: nowrap;
     }
     .contact a {
       color: #9f7aea;
       text-decoration: none;
     }
     .contact p {
-      margin: 0.4rem 0;
+      margin: 0.2rem 0;
     }
 
     /* 主内容区 */
     .main {
       flex: 1;
-      margin-left: 260px;
-      padding: 3rem 4rem;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
+      padding: 2rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     #content {
@@ -113,13 +127,13 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       min-height: 600px;
-      flex: 1;
+      width: 100%;
     }
 
     /* 底部版权 */
     .footer {
       text-align: center;
-      margin-top: 2rem;
+      margin: 2rem 0;
       color: #718096;
       font-size: 0.9rem;
     }
@@ -151,37 +165,51 @@
 
     /* 移动端适配 */
     @media (max-width: 768px) {
-      body {
+      .header-container {
         flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
       }
-      .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
+      .contact {
+        margin-top: 0.5rem;
       }
       .main {
-        margin-left: 0;
-        padding: 2rem 1rem;
+        padding: 1.5rem 1rem;
+      }
+      #content {
+        padding: 1.5rem;
+        min-height: 400px;
+      }
+      .file-list {
+        width: 100%;
       }
     }
   </style>
 </head>
 
 <body>
-  <!-- 侧边栏 -->
-  <div class="sidebar">
-    <img class="avatar" src="toxiang.png" alt="Aydin头像">
-    <h1>Aydin</h1>
-    <p class="desc">wait for you...</p>
+  <!-- 顶部导航栏（原侧边栏） -->
+  <div class="header">
+    <div class="header-container">
+      <!-- 个人信息 -->
+      <div class="profile">
+        <img class="avatar" src="toxiang.png" alt="Aydin头像">
+        <div class="profile-info">
+          <h1>Aydin</h1>
+          <p class="desc">wait for you...</p>
+        </div>
+      </div>
 
-    <div class="file-list" id="fileList">
-      加载文章列表中...
-    </div>
+      <!-- 目录列表 -->
+      <div class="file-list" id="fileList">
+        加载文章列表中...
+      </div>
 
-    <!-- 联系方式 -->
-    <div class="contact">
-      <p>GitHub：<a href="https://github.com/Aydin0118" target="_blank">Aydin0118</a></p>
-      <p>邮箱：<a href="mailto:example@mail.com">aydinid@outlook.com</a></p>
+      <!-- 联系方式 -->
+      <div class="contact">
+        <p>GitHub：<a href="https://github.com/Aydin0118" target="_blank">Aydin0118</a></p>
+        <p>邮箱：<a href="mailto:example@mail.com">aydinid@outlook.com</a></p>
+      </div>
     </div>
   </div>
 
@@ -246,9 +274,7 @@
         const text = await res.text();
         contentDiv.innerHTML = marked.parse(text);
 
-        // ==============================================
-        // ✅ 核心：自动让所有 .md 链接在页面内渲染（不是源码）
-        // ==============================================
+        // 核心：自动让所有 .md 链接在页面内渲染
         bindMdLinks();
       } catch (err) {
         contentDiv.innerHTML = `<span class="error">⚠️ ${file} 不存在或无法加载</span>`;
